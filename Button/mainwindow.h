@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QObject>
 #include <QMainWindow>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -16,17 +17,17 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void onNewConnection();
-    void onSocketStateChanged(QAbstractSocket::SocketState socketState);
-    void onReadyRead();
 
 private slots:
+    void newConnection();
+    void onSocketStateChanged(QAbstractSocket::SocketState socketState);
+    void onReadyRead();
     void on_pushButton_clicked();
 
 private:
     Ui::MainWindow *ui;
 
-    QTcpServer _server;
+    QTcpServer *pServer;
     QList<QTcpSocket*> _sockets;
 };
 #endif // MAINWINDOW_H

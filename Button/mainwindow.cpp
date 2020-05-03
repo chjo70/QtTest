@@ -8,12 +8,13 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , _server(this)
 {
     ui->setupUi(this);
 
-    _server.listen(QHostAddress::Any, 4242);
-    connect(&_server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
+    pServer = new QTcpServer(this);
+    connect( pServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
+    pServer->listen(QHostAddress::Any, 4242);
+
 }
 
 MainWindow::~MainWindow()
@@ -27,15 +28,18 @@ void MainWindow::on_pushButton_clicked()
 
 }
 
-void MainWindow::onNewConnection()
+void MainWindow::newConnection()
 {
-   QTcpSocket *clientSocket = _server.nextPendingConnection();
-   connect(clientSocket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
-   connect(clientSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(onSocketStateChanged(QAbstractSocket::SocketState)));
+    while (pServer->hasPendingConnections())
+    {
+        QTcpSocket *clientSocket = pServer->nextPendingConnection();
+        connect(clientSocket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
+        connect(clientSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(onSocketStateChanged(QAbstractSocket::SocketState)));
 
-    _sockets.push_back(clientSocket);
-    for (QTcpSocket* socket : _sockets) {
-        socket->write(QByteArray::fromStdString(clientSocket->peerAddress().toString().toStdString() + " connected to server !\n"));
+        _sockets.push_back(clientSocket);
+        for (QTcpSocket* socket : _sockets) {
+            socket->write(QByteArray::fromStdString(clientSocket->peerAddress().toString().toStdString() + " connected to server !\n"));
+        }
     }
 }
 
